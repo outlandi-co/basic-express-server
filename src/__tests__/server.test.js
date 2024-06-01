@@ -21,6 +21,11 @@ describe('API Server', () => {
     expect(response.text).toBe('Not Found');
   });
 
+  it('should respond with a 404 status for an invalid method', async () => {
+    const response = await request.post('/');
+    expect(response.status).toBe(404);
+  });
+
   it('should respond with a 200 status for the /data route', async () => {
     const response = await request.get('/data');
     expect(response.status).toBe(200);
@@ -49,5 +54,10 @@ describe('API Server', () => {
     const response = await request.get('/person?name=Adam');
     expect(response.status).toBe(200);
     expect(response.body.name).toBe('Adam');
+  });
+
+  it('should respond with the correct object if the name is provided in the query string for /person', async () => {
+    const response = await request.get('/person?name=Adam');
+    expect(response.body).toEqual({ name: 'Adam' });
   });
 });
