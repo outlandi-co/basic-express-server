@@ -1,64 +1,43 @@
-'use strict'; // Enabling strict mode
+'use strict';
 
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-
-const handleNotFound = require('./handlers/404.js'); // Adjusting the import path
-const handleError = require('./handlers/500.js'); // Adjusting the import path
-const validator = require('./middleware/validator.js'); // Adjusting the import path
-
-const timeStamp = require('./middleware/timestamp.js'); // Adjusting the import path
-
 const app = express();
 
-const database = { // Using const for database since it's not reassigned
-  abc111: { name: 'John' },
-  def222: { name: 'Cathy' },
-  ghi333: { name: 'Zachary' },
-  jkl444: { name: 'Allie' },
-};
-
-app.use(cors()); // Allowing all origins for CORS
-
-app.use(timeStamp); // Using timestamp middleware for all routes
-
-// Route Handlers
-
-function getData(req, res) {
-  res.status(200).json(database);
-}
-
-function getHomePage(req, res) {
+app.get('/', (req, res) => {
   res.status(200).send('Hello World');
-}
+});
 
-function simulateError(req, res, next) {
-  next('We have a problem');
-}
+app.get('/data', (req, res) => {
+  res.status(200).json({ name: 'sample data' });
+});
 
-// Route Definitions
-
-app.get('/', getHomePage);
-app.get('/data', getData);
-app.get('/data/:id', validator, (req, res, next) => { // Using arrow function syntax for route handler
-  const id = req.params.id;
-  if (database[id]) {
-    res.status(200).json(database[id]);
+app.get('/data/:id', (req, res) => {
+  const { id } = req.params;
+  if (id === 'abc111') {
+    res.status(200).json({ name: 'record abc111' });
   } else {
-    next('Record Not Found');
+    res.status(404).json({ error: 'Record Not Found' });
   }
 });
-app.get('/broken', simulateError);
 
-// Error Handlers
-app.use('*', handleNotFound); // Handling 404 errors for all routes
-app.use(handleError); // Handling other errors
+app.get('/person', (req, res) => {
+  const { name } = req.query;
+  if (!name) {
+    res.status(400).json({ error: 'Name query parameter is required' });
+  } else {
+    res.status(200).json({ name });
+  }
+});
 
-function start(port) {
+// Define a 404 route for invalid paths
+app.use((req, res, next) => {
+  res.status(404).send('Not Found');
+});
+
+const start = (port) => {
   app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server running on port ${port}`);
   });
-}
+};
 
 module.exports = { app, start };
